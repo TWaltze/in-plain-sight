@@ -27,13 +27,19 @@ var Message = function(key, message, hashes) {
             'hash': noiseHash
         };
     };
+
+    this.chunk = function(str, amount) {
+        var size = Math.ceil(str.length / amount);
+
+        return str.match(new RegExp('.{1,' + size + '}', 'g')) || [];
+    };
 };
 
-Message.prototype.deconstruct = function() {
+Message.prototype.deconstruct = function(amount) {
     var _self = this;
 
-    // Break message into characters
-    this.message.split('').forEach(function(character, index) {
+    // Break message into chunks
+    this.chunk(this.message, amount).forEach(function(character, index) {
         // Generate valid hmac for this character
         var mac = new sjcl.misc.hmac(_self.key);
         var hash = sjcl.codec.hex.fromBits(mac.mac(character));

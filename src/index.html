@@ -27,7 +27,7 @@
 
                 var message = new Message('foobar', 'Hello world!!');
 
-                message.deconstruct();
+                message.deconstruct(10);
                 console.log('Number of hashes:', message.hashes.length);
                 console.log('Total byte size:', mbCount(JSON.stringify(message.hashes)) + ' MB');
 
