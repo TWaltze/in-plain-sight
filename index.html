@@ -12,7 +12,10 @@
 
         <script>
             window.onload = function() {
+                var message = new Message('foobar', 'Hello world!!');
 
+                console.log(message.deconstruct());
+                console.log(message.reconstruct());
             }
         </script>
     </head>

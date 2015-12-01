@@ -1,70 +1,85 @@
 'use strict';
 
-var message = 'Hello world!';
-var key = sjcl.codec.utf8String.toBits('foobar');
-var hashes = [];
+var Message = function(key, message, hashes) {
+    this.message = message;
+    this.key = sjcl.codec.utf8String.toBits(key);
+    this.hashes = [];
 
-function random_base64(length) {
-    var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-    var str = "";
-    for (var i=0; i < length; ++i) {
-        var rand = Math.floor(Math.random() * ALPHABET.length);
-        str += ALPHABET.substring(rand, rand+1);
-    }
-    return str;
-}
+    this.randomStr = function(length) {
+        var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+        var str = "";
+        for (var i=0; i < length; ++i) {
+            var rand = Math.floor(Math.random() * ALPHABET.length);
+            str += ALPHABET.substring(rand, rand+1);
+        }
+        return str;
+    };
 
-function shuffle(array) {
-  var currentIndex = array.length, temporaryValue, randomIndex ;
+    this.randomHMAC = function() {
+        var randomCharacter = this.randomStr(1);
+        var randomKey = sjcl.codec.utf8String.toBits(this.randomStr(10));
+        var noiseMac = new sjcl.misc.hmac(randomKey);
+    	var noiseHash = noiseMac.encrypt(randomCharacter);
 
-  // While there remain elements to shuffle...
-  while (0 !== currentIndex) {
+        return {
+            'character': randomCharacter,
+            'hash': noiseHash.join('')
+        };
+    };
 
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
+    this.shuffle = function(array) {
+      var currentIndex = array.length, temporaryValue, randomIndex ;
 
-    // And swap it with the current element.
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
+      // While there remain elements to shuffle...
+      while (0 !== currentIndex) {
 
-  return array;
-}
+        // Pick a remaining element...
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
 
-for (var i = 0; i < message.length; i++) {
-    var mac = new sjcl.misc.hmac(key);
-	var hash = mac.encrypt(message[i]);
-    hashes.push({
-        'character': message[i],
-        'hash': hash.join(''),
-        'key': key,
-        'index': i
-    });
+        // And swap it with the current element.
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+      }
 
-    var randomCharacter = random_base64(1);
-    var randomKey = sjcl.codec.utf8String.toBits(random_base64(key.length));
-    var noiseMac = new sjcl.misc.hmac(randomKey);
-	var noiseHash = noiseMac.encrypt(randomCharacter);
-    hashes.push({
-        'character': randomCharacter,
-        'hash': noiseHash.join(''),
-        'key': randomKey,
-        'index': i
-    });
-}
-
-shuffle(hashes);
-
-var rebuilt = [];
-for (var i = 0; i < hashes.length; i++) {
-    var macz = new sjcl.misc.hmac(key);
-	var hashz = macz.encrypt(hashes[i].character).join('');
-
-    if (hashz === hashes[i].hash) {
-        rebuilt[hashes[i].index] = hashes[i].character;
+      return array;
     }
 }
 
-console.log(rebuilt.join(''));
+Message.prototype.deconstruct = function() {
+    var _self = this;
+    // Break message into characters
+    this.message.split('').forEach(function(character, index) {
+        // Generate valid hmac for this character
+        var mac = new sjcl.misc.hmac(_self.key);
+    	var hash = mac.encrypt(character);
+        _self.hashes.push({
+            'character': character,
+            'hash': hash.join(''),
+            'index': index
+        });
+
+        // Generate some noise for each character
+        var random = _self.randomHMAC();
+        random.index = index;
+        _self.hashes.push(random);
+    });
+
+    return this.shuffle(this.hashes);
+}
+
+Message.prototype.reconstruct = function() {
+    var _self = this;
+    var rebuilt = [];
+    this.hashes.forEach(function(h) {
+        var mac = new sjcl.misc.hmac(_self.key);
+    	var hash = mac.encrypt(h.character).join('');
+
+        if (hash === h.hash) {
+            rebuilt[h.index] = h.character;
+        }
+    });
+
+    return rebuilt.join('');
+}
