@@ -36,7 +36,7 @@ module.exports = function(grunt) {
             },
             html: {
                 files: ['<%= dirs.app %>/**/*.html'],
-                tasks: ['newer:copy:dev']
+                tasks: ['newer:copy:dev', 'wiredep:dev']
             },
             livereload: {
                 options: {
