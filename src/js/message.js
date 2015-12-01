@@ -4,6 +4,7 @@ var Message = function(key, message, hashes) {
     this.message = message;
     this.key = sjcl.codec.utf8String.toBits(key);
     this.hashes = hashes || [];
+    this.noiseFactor = 1000;
 
     this.randomStr = function(length) {
         var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -64,9 +65,11 @@ Message.prototype.deconstruct = function() {
         });
 
         // Generate some noise for each character
-        var random = _self.randomHMAC();
-        random.index = index;
-        _self.hashes.push(random);
+        for (var i = 0; i < _self.noiseFactor; i++) {
+            var random = _self.randomHMAC();
+            random.index = index;
+            _self.hashes.push(random);
+        }
     });
 
     return this.shuffle(this.hashes);

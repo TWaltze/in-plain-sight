@@ -17,10 +17,24 @@
 
         <script>
             window.onload = function() {
+                function byteCount(s) {
+                    return encodeURI(s).split(/%(?:u[0-9A-F]{2})?[0-9A-F]{2}|./).length - 1;
+                }
+
+                function mbCount(s) {
+                    return (byteCount(s) / 1048576).toFixed(2);
+                }
+
                 var message = new Message('foobar', 'Hello world!!');
 
-                console.log(message.deconstruct());
-                console.log(message.reconstruct());
+                message.deconstruct();
+                console.log('Number of hashes:', message.hashes.length);
+                console.log('Total byte size:', mbCount(JSON.stringify(message.hashes)) + ' MB');
+
+                var start = performance.now();
+                console.log('Message:', message.reconstruct());
+                var end = performance.now();
+                console.log('Time to reconstruct:', end - start);
             }
         </script>
     </head>
