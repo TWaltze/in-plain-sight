@@ -27,27 +27,6 @@ var Message = function(key, message, hashes) {
             'hash': noiseHash.join('')
         };
     };
-
-    this.shuffle = function(array) {
-        var currentIndex = array.length;
-        var temporaryValue;
-        var randomIndex;
-
-        // While there remain elements to shuffle...
-        while (0 !== currentIndex) {
-
-            // Pick a remaining element...
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex -= 1;
-
-            // And swap it with the current element.
-            temporaryValue = array[currentIndex];
-            array[currentIndex] = array[randomIndex];
-            array[randomIndex] = temporaryValue;
-        }
-
-        return array;
-    };
 };
 
 Message.prototype.deconstruct = function() {
@@ -72,7 +51,9 @@ Message.prototype.deconstruct = function() {
         }
     });
 
-    return this.shuffle(this.hashes);
+    this.hashes = _.shuffle(this.hashes);
+
+    return this.hashes;
 };
 
 Message.prototype.reconstruct = function() {

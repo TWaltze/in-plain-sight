@@ -22,6 +22,7 @@
     "node": true,
 
     "globals": {
-        "sjcl": false
+        "sjcl": false,
+        "_": false
     }
 }
