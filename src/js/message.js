@@ -20,11 +20,11 @@ var Message = function(key, message, hashes) {
         var randomCharacter = this.randomStr(1);
         var randomKey = sjcl.codec.utf8String.toBits(this.randomStr(10));
         var noiseMac = new sjcl.misc.hmac(randomKey);
-        var noiseHash = noiseMac.encrypt(randomCharacter);
+        var noiseHash = sjcl.codec.hex.fromBits(noiseMac.mac(randomCharacter));
 
         return {
             'character': randomCharacter,
-            'hash': noiseHash.join('')
+            'hash': noiseHash
         };
     };
 };
@@ -36,10 +36,10 @@ Message.prototype.deconstruct = function() {
     this.message.split('').forEach(function(character, index) {
         // Generate valid hmac for this character
         var mac = new sjcl.misc.hmac(_self.key);
-        var hash = mac.encrypt(character);
+        var hash = sjcl.codec.hex.fromBits(mac.mac(character));
         _self.hashes.push({
             'character': character,
-            'hash': hash.join(''),
+            'hash': hash,
             'index': index
         });
 
@@ -61,7 +61,7 @@ Message.prototype.reconstruct = function() {
     var rebuilt = [];
     this.hashes.forEach(function(h) {
         var mac = new sjcl.misc.hmac(_self.key);
-        var hash = mac.encrypt(h.character).join('');
+        var hash = sjcl.codec.hex.fromBits(mac.mac(h.character));
 
         if (hash === h.hash) {
             rebuilt[h.index] = h.character;
