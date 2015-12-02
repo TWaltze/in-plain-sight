@@ -29,9 +29,25 @@ var Message = function(key, message, hashes) {
     };
 
     this.chunk = function(str, amount) {
-        var size = Math.ceil(str.length / amount);
+        if (!str || str.length === 0) {
+            return [];
+        }
 
-        return str.match(new RegExp('.{1,' + size + '}', 'g')) || [];
+        var size = Math.floor(str.length / amount);
+        if (size === 0) {
+            size = 1;
+        }
+
+        var chunks = str.match(new RegExp('.{1,' + size + '}', 'g'));
+        if (chunks.length > amount) {
+            var start = chunks.slice(0, amount - 1);
+            var end = chunks.slice(amount - 1).join('');
+            start.push(end);
+
+            chunks = start;
+        }
+        console.log(chunks);
+        return chunks;
     };
 };
 
